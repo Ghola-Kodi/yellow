@@ -1,0 +1,120 @@
+-- Demo seed data for Stripe + Klaviyo dunning dashboard
+-- Paste this into Supabase SQL editor after running 001_initial_schema.sql and 002_payment_failures_schema.sql.
+
+INSERT INTO public.payment_failures (
+  customer_email,
+  stripe_customer_id,
+  amount,
+  currency,
+  status,
+  decline_type,
+  attempt_count,
+  recovery_status,
+  klaviyo_flow_status,
+  metadata
+)
+VALUES
+  (
+    'alex@northwind.test',
+    'cus_seed_001',
+    12900,
+    'usd',
+    'pending',
+    'soft',
+    1,
+    'pending',
+    'not_sent',
+    '{"source":"seed","segment":"at_risk","risk_score":72}'::jsonb
+  ),
+  (
+    'maya@luna.test',
+    'cus_seed_002',
+    8400,
+    'usd',
+    'retrying',
+    'hard',
+    2,
+    'retrying',
+    'queued',
+    '{"source":"seed","segment":"retry","risk_score":81}'::jsonb
+  ),
+  (
+    'omar@atlas.test',
+    'cus_seed_003',
+    22000,
+    'usd',
+    'sent',
+    'soft',
+    3,
+    'sent',
+    'sent',
+    '{"source":"seed","segment":"recovery_email","risk_score":63}'::jsonb
+  ),
+  (
+    'nina@greenfield.test',
+    'cus_seed_004',
+    17600,
+    'usd',
+    'recovered',
+    'soft',
+    2,
+    'recovered',
+    'delivered',
+    '{"source":"seed","segment":"recovered","risk_score":39}'::jsonb
+  ),
+  (
+    'leo@horizon.test',
+    'cus_seed_005',
+    25600,
+    'usd',
+    'failed',
+    'hard',
+    4,
+    'failed',
+    'not_sent',
+    '{"source":"seed","segment":"escalated","risk_score":91}'::jsonb
+  )
+ON CONFLICT (stripe_customer_id) DO NOTHING;
+
+-- Optional: create a few rows with explicit event IDs for Stripe simulation mapping.
+INSERT INTO public.payment_failures (
+  stripe_event_id,
+  customer_email,
+  stripe_customer_id,
+  amount,
+  currency,
+  status,
+  decline_type,
+  attempt_count,
+  recovery_status,
+  klaviyo_flow_status,
+  metadata
+)
+VALUES
+  (
+    'evt_demo_101',
+    'testuser@example.com',
+    'cus_seed_006',
+    19900,
+    'usd',
+    'pending',
+    'soft',
+    1,
+    'pending',
+    'not_sent',
+    '{"source":"simulator","eventType":"invoice.payment_failed"}'::jsonb
+  ),
+  (
+    'evt_demo_102',
+    'vip.customer@example.com',
+    'cus_seed_007',
+    44900,
+    'usd',
+    'retrying',
+    'hard',
+    2,
+    'retrying',
+    'queued',
+    '{"source":"simulator","eventType":"payment_intent.payment_failed"}'::jsonb
+  )
+ON CONFLICT (stripe_event_id) DO NOTHING;

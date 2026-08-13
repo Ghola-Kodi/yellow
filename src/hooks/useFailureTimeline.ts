@@ -1,0 +1,3 @@
+﻿export function useFailureTimeline() {
+  return [];
+}
