@@ -1,0 +1,20 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/cron/retry-failed/route": "app/api/cron/retry-failed/route.js",
+  "/api/failures/route": "app/api/failures/route.js",
+  "/api/demo/route": "app/api/demo/route.js",
+  "/api/klaviyo/sync/route": "app/api/klaviyo/sync/route.js",
+  "/api/simulator/route": "app/api/simulator/route.js",
+  "/api/metrics/route": "app/api/metrics/route.js",
+  "/api/webhooks/stripe/route": "app/api/webhooks/stripe/route.js",
+  "/(auth)/signup/page": "app/(auth)/signup/page.js",
+  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/page": "app/page.js",
+  "/demo/page": "app/demo/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/dashboard/flows/page": "app/dashboard/flows/page.js",
+  "/dashboard/settings/page": "app/dashboard/settings/page.js",
+  "/dashboard/simulator/page": "app/dashboard/simulator/page.js",
+  "/dashboard/failures/[id]/page": "app/dashboard/failures/[id]/page.js",
+  "/dashboard/failures/page": "app/dashboard/failures/page.js"
+}
