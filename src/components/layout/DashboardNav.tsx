@@ -34,10 +34,10 @@ export default function DashboardNav() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-2 ml-6">
-          <Link href="/simulator" className="text-sm text-slate-300 hover:text-white">Simulator</Link>
-          <Link href="/failures" className="text-sm text-slate-300 hover:text-white">Failures</Link>
-          <Link href="/flows" className="text-sm text-slate-300 hover:text-white">Flows</Link>
-          <Link href="/settings" className="text-sm text-slate-300 hover:text-white">Settings</Link>
+          <Link href="/dashboard/simulator" className="text-sm text-slate-300 hover:text-white">Simulator</Link>
+          <Link href="/dashboard/failures" className="text-sm text-slate-300 hover:text-white">Failures</Link>
+          <Link href="/dashboard/flows" className="text-sm text-slate-300 hover:text-white">Flows</Link>
+          <Link href="/dashboard/settings" className="text-sm text-slate-300 hover:text-white">Settings</Link>
         </nav>
       </div>
 
