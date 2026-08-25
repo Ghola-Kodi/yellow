@@ -1,4 +1,4 @@
-﻿// app/page.tsx
+// app/page.tsx
 'use client';
 
 import Link from 'next/link';
@@ -80,7 +80,7 @@ export default function LandingPage() {
                   Worklane Landing Demo
                 </Link>
                 <Link
-                  href="/simulator"
+                  href="/dashboard/simulator"
                   className="inline-flex items-center justify-center rounded-full border border-slate-700 bg-slate-900/90 px-8 py-3 text-sm font-medium text-slate-200 transition hover:border-slate-600 hover:bg-slate-900"
                 >
                   Try Simulator
@@ -263,7 +263,7 @@ export default function LandingPage() {
                 View live demo
               </Link>
               <Link
-                href="/simulator"
+                href="/dashboard/simulator"
                 className="inline-flex items-center justify-center rounded-full border border-slate-700 bg-slate-900/90 px-10 py-3 text-sm font-medium text-slate-200 transition hover:border-slate-600 hover:bg-slate-900"
               >
                 Open simulator
