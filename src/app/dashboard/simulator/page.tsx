@@ -1,4 +1,4 @@
-﻿// app/(dashboard)/simulator/page.tsx
+// app/(dashboard)/simulator/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -7,7 +7,6 @@ import {
   Zap, 
   CreditCard, 
   Mail, 
-  Activity,
   CheckCircle,
   AlertCircle,
   Clock,
@@ -44,74 +43,31 @@ export default function SimulatorPage() {
     setResult(null);
 
     try {
-      const response = await fetch('/api/simulator', {
+      // This creates a real Stripe test-mode PaymentIntent using a
+      // guaranteed-decline test payment method. Stripe genuinely fails it,
+      // then sends a real signed webhook to /api/webhooks/stripe, which is
+      // what actually stores the failure in Supabase and fires the Klaviyo
+      // flow to this email address. Nothing here talks to Supabase or
+      // Klaviyo directly.
+      const response = await fetch('/api/simulate-stripe-failure', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email,
           amount: parseFloat(amount) * 100,
           declineType,
-          attemptCount: 1,
-          isTestMode: true,
         }),
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to simulate failure');
+      if (!response.ok || data.error) {
+        throw new Error(data.error || 'Failed to trigger Stripe test decline');
       }
 
       setResult(data);
-
-      // Navigate to the failure detail after 1.5 seconds
-      setTimeout(() => {
-        if (data.id) {
-          router.push(`/failures/${data.id}`);
-        }
-      }, 1500);
-
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleWebhookSimulation = async () => {
-    setIsLoading(true);
-    setError(null);
-    setResult(null);
-
-    try {
-      // This would call the actual webhook endpoint with a test payload
-      const response = await fetch('/api/webhooks/stripe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: `evt_sim_${Date.now()}`,
-          type: 'invoice.payment_failed',
-          data: {
-            object: {
-              customer: `cus_sim_${Date.now()}`,
-              customer_email: email,
-              amount_due: parseFloat(amount) * 100,
-              currency: 'usd',
-              attempt_count: 1,
-              last_payment_error: {
-                code: 'insufficient_funds',
-                message: 'Insufficient funds',
-              },
-            },
-          },
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error);
-      setResult(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Webhook simulation failed');
     } finally {
       setIsLoading(false);
     }
@@ -214,28 +170,10 @@ export default function SimulatorPage() {
                 </Button>
               </div>
 
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-800"></div>
-                </div>
-                <div className="relative flex justify-center text-xs">
-                  <span className="px-2 bg-gray-900 text-gray-500">OR</span>
-                </div>
-              </div>
-
-              <Button
-                onClick={handleWebhookSimulation}
-                disabled={isLoading}
-                variant="outline"
-                className="w-full border-gray-700 hover:border-gray-600 flex items-center gap-2"
-              >
-                {isLoading ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Activity className="w-4 h-4" />
-                )}
-                Simulate Full Webhook (Stripe → Klaviyo)
-              </Button>
+              <p className="text-xs text-gray-500">
+                This triggers a real Stripe test-mode decline. Stripe's webhook fires back to this
+                app, which stores the failure and sends the Klaviyo email to the address above.
+              </p>
             </div>
 
             {/* Result */}
@@ -256,13 +194,12 @@ export default function SimulatorPage() {
                   <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
                     <p className="text-green-400 text-sm flex items-center gap-2">
                       <CheckCircle className="w-4 h-4" />
-                      Failure simulated successfully!
+                      Real Stripe decline triggered
                     </p>
-                    {result.id && (
-                      <p className="text-xs text-gray-400 mt-1">
-                        Redirecting to failure #{result.id.slice(0, 8)}...
-                      </p>
-                    )}
+                    <p className="text-xs text-gray-400 mt-1">
+                      Check {email} in a few seconds — Stripe's webhook will land shortly and the
+                      Klaviyo email should follow.
+                    </p>
                   </div>
                 )}
               </motion.div>
