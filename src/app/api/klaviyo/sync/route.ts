@@ -1,4 +1,4 @@
-﻿import { klaviyoClient } from '@/lib/klaviyo/client';
+import { klaviyoClient } from '@/lib/klaviyo/client';
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
@@ -24,7 +24,9 @@ export async function POST(request: Request) {
       properties,
     });
 
-    const data = await response.json();
+    // Fix: Use optional chaining to safely call json()
+    const data = await response.json?.() ?? {};
+
     return Response.json({ ok: true, eventName, email, data });
   } catch (error) {
     return Response.json({ ok: false, error: error instanceof Error ? error.message : 'Klaviyo sync failed' }, { status: 500 });
