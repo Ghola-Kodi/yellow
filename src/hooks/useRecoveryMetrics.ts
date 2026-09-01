@@ -1,4 +1,5 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase/client';
 
 const baseMetrics = {
   atRiskMRR: 0,
@@ -20,7 +21,24 @@ export function useRecoveryMetrics(timeRange: '7d' | '30d' | '90d') {
       setLoading(true);
 
       try {
-        const response = await fetch('/api/metrics');
+        let headers: Record<string, string> = {};
+        if (supabase) {
+          const { data } = await supabase.auth.getSession();
+          const token = data.session?.access_token;
+          if (token) {
+            headers = { Authorization: `Bearer ${token}` };
+          }
+        }
+
+        const response = await fetch('/api/metrics', { headers });
+
+        if (response.status === 401) {
+          if (!ignore) {
+            setMetrics(baseMetrics);
+          }
+          return;
+        }
+
         const json = await response.json();
         if (!ignore) {
           const data = json.metrics ?? baseMetrics;
