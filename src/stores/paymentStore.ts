@@ -1,6 +1,7 @@
-﻿'use client';
+'use client';
 
 import { create } from 'zustand';
+import { supabase } from '@/lib/supabase/client';
 
 export type FailedPayment = {
   id: string;
@@ -25,6 +26,15 @@ interface PaymentState {
   fetchPayments: () => Promise<void>;
 }
 
+async function authHeaders(): Promise<Record<string, string>> {
+  if (!supabase) {
+    return {};
+  }
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 export const paymentStore = create<PaymentState>((set) => ({
   payments: [],
   loading: false,
@@ -32,7 +42,14 @@ export const paymentStore = create<PaymentState>((set) => ({
   fetchPayments: async () => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch('/api/failures');
+      const headers = await authHeaders();
+      const response = await fetch('/api/failures', { headers });
+
+      if (response.status === 401) {
+        set({ payments: [], error: 'Sign in to view failed payments' });
+        return;
+      }
+
       const data = await response.json();
       set({ payments: data.items || [] });
     } catch (err) {
