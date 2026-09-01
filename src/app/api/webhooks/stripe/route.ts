@@ -2,6 +2,7 @@ import Stripe from 'stripe';
 import { createPaymentFailure } from '@/lib/payment-store';
 import { getStripeWebhookSecret, stripeClient } from '@/lib/stripe/client';
 import { triggerDunningEmail } from '@/lib/klaviyo/client';
+import { validateWebhookPayload } from '@/lib/validators/webhook';
 
 type SupportedEventType = 'invoice.payment_failed' | 'payment_intent.payment_failed';
 
@@ -108,23 +109,24 @@ export async function POST(request: Request) {
       return Response.json({ ok: false, error: 'Webhook verification not configured' }, { status: 400 });
     }
 
-    let payload: any;
+    let payload: unknown;
     try {
       payload = JSON.parse(rawBody || '{}');
     } catch {
       return Response.json({ ok: false, error: 'Invalid JSON body' }, { status: 400 });
     }
 
-    const eventType = payload?.type ?? 'invoice.payment_failed';
+    if (!validateWebhookPayload(payload)) {
+      return Response.json({ ok: false, error: 'Malformed webhook payload' }, { status: 400 });
+    }
+
+    const eventId = (payload as { id?: string }).id ?? `evt_${Date.now()}`;
+    const eventType = payload.type;
     const fields = extractFailureFields({
       type: eventType,
-      data: { object: payload?.data?.object ?? {} },
+      data: { object: payload.data.object },
     });
-    const { failure, klaviyoResult } = await storeAndNotify(
-      payload?.id ?? `evt_${Date.now()}`,
-      eventType,
-      fields,
-    );
+    const { failure, klaviyoResult } = await storeAndNotify(eventId, eventType, fields);
     return Response.json({ ok: true, verified: false, failure, klaviyo: klaviyoResult });
   }
 
