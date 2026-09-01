@@ -10,8 +10,7 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, error: 'Not available in production' }, { status: 404 });
   }
 
-  const apiKey = process.env.KLAVIYO_PRIVATE_API_KEY;
-  if (!apiKey) {
+  if (!process.env.KLAVIYO_PRIVATE_API_KEY) {
     return Response.json({ ok: false, error: 'KLAVIYO_PRIVATE_API_KEY is not configured' }, { status: 500 });
   }
 
@@ -28,47 +27,32 @@ export async function POST(request: Request) {
       status: body.status ?? 'pending',
     };
 
-    // Klaviyo v3 Events API (v1/track is legacy)
-    const response = await klaviyoClient.post('events/', {
-      data: {
-        type: 'event',
-        attributes: {
-          properties,
-          metric: {
-            data: {
-              type: 'metric',
-              attributes: { name: eventName },
-            },
-          },
-          profile: {
-            data: {
-              type: 'profile',
-              attributes: {
-                email,
-                first_name: body.firstName ?? 'Customer',
-              },
-            },
-          },
-        },
+    // klaviyoClient.post injects Authorization internally from
+    // KLAVIYO_PRIVATE_API_KEY — no token needed in the body, and no third
+    // args (headers) are supported by this client, so this stays on the
+    // legacy v1/track endpoint like triggerDunningEmail does.
+    const result = await klaviyoClient.post('v1/track', {
+      event: eventName,
+      customer_properties: {
+        $email: email,
+        $first_name: body.firstName ?? 'Customer',
       },
-    }, {
-      headers: {
-        Authorization: `Klaviyo-API-Key ${apiKey}`,
-        revision: '2024-10-15',
-      },
+      properties,
     });
 
-    if (!response.ok) {
-      const errorBody = await response.text().catch(() => '');
+    if (result.skipped) {
+      return Response.json({ ok: false, error: result.reason }, { status: 500 });
+    }
+
+    if (!result.ok) {
+      const details = await result.json().catch(() => null);
       return Response.json(
-        { ok: false, error: `Klaviyo returned ${response.status}`, details: errorBody },
+        { ok: false, error: `Klaviyo returned ${result.status}`, details },
         { status: 502 },
       );
     }
 
-    // Klaviyo's Events endpoint returns 202 with no body on success
-    const data = response.status === 202 ? null : await response.json().catch(() => null);
-
+    const data = await result.json().catch(() => null);
     return Response.json({ ok: true, eventName, email, data });
   } catch (error) {
     console.error('⚠️ Klaviyo test trigger failed:', error instanceof Error ? error.message : error);
