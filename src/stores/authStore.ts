@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { create } from 'zustand';
 import type { User } from '@supabase/supabase-js';
@@ -30,7 +30,7 @@ export const authStore = create<AuthState>((set) => ({
     set({ loading: true, error: null });
     try {
       if (!supabase) {
-        set({ user: { id: 'demo', email: 'admin@admin.cpm' } });
+        set({ error: 'Supabase is not configured' });
         return;
       }
 
@@ -49,16 +49,10 @@ export const authStore = create<AuthState>((set) => ({
   signInWithPassword: async (email, password) => {
     set({ loading: true, error: null });
     try {
-      if (email === 'admin@admin.cpm' && password === 'admin123') {
-        const demoUser = { id: 'demo', email: 'admin@admin.cpm' };
-        set({ user: demoUser });
-        return { user: demoUser };
-      }
-
       if (!supabase) {
-        const demoUser = { id: 'demo', email: 'admin@admin.cpm' };
-        set({ user: demoUser });
-        return { user: demoUser };
+        const message = 'Supabase is not configured';
+        set({ error: message });
+        return { user: null, error: message };
       }
 
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -85,16 +79,10 @@ export const authStore = create<AuthState>((set) => ({
   signUpWithPassword: async (email, password) => {
     set({ loading: true, error: null });
     try {
-      if (email === 'admin@admin.cpm' && password === 'admin123') {
-        const demoUser = { id: 'demo', email: 'admin@admin.cpm' };
-        set({ user: demoUser });
-        return { user: demoUser };
-      }
-
       if (!supabase) {
-        const demoUser = { id: 'demo', email: 'admin@admin.cpm' };
-        set({ user: demoUser });
-        return { user: demoUser };
+        const message = 'Supabase is not configured';
+        set({ error: message });
+        return { user: null, error: message };
       }
 
       const { data, error } = await supabase.auth.signUp({ email, password });
