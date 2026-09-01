@@ -45,14 +45,14 @@ export async function POST(request: Request) {
     }
 
     if (!result.ok) {
-      const details = await result.json().catch(() => null);
+      const details = await result.json?.().catch(() => null);
       return Response.json(
         { ok: false, error: `Klaviyo returned ${result.status}`, details },
         { status: 502 },
       );
     }
 
-    const data = await result.json().catch(() => null);
+    const data = await result.json?.().catch(() => null);
     return Response.json({ ok: true, eventName, email, data });
   } catch (error) {
     console.error('⚠️ Klaviyo test trigger failed:', error instanceof Error ? error.message : error);
