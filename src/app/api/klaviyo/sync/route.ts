@@ -27,17 +27,30 @@ export async function POST(request: Request) {
       status: body.status ?? 'pending',
     };
 
-    // klaviyoClient.post injects Authorization internally from
-    // KLAVIYO_PRIVATE_API_KEY — no token needed in the body, and no third
-    // args (headers) are supported by this client, so this stays on the
-    // legacy v1/track endpoint like triggerDunningEmail does.
-    const result = await klaviyoClient.post('v1/track', {
-      event: eventName,
-      customer_properties: {
-        $email: email,
-        $first_name: body.firstName ?? 'Customer',
+    // Current Events API (v3) — the legacy v1/track endpoint this used to
+    // call was retired by Klaviyo on June 30, 2024 and now returns 410.
+    const result = await klaviyoClient.post('events', {
+      data: {
+        type: 'event',
+        attributes: {
+          metric: {
+            data: {
+              type: 'metric',
+              attributes: { name: eventName },
+            },
+          },
+          profile: {
+            data: {
+              type: 'profile',
+              attributes: {
+                email,
+                first_name: body.firstName ?? 'Customer',
+              },
+            },
+          },
+          properties,
+        },
       },
-      properties,
     });
 
     if (result.skipped) {
@@ -52,7 +65,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const data = await result.json?.().catch(() => null);
+    // Events API returns 202 Accepted with no body on success.
+    const data = result.status === 202 ? null : await result.json?.().catch(() => null);
     return Response.json({ ok: true, eventName, email, data });
   } catch (error) {
     console.error('⚠️ Klaviyo test trigger failed:', error instanceof Error ? error.message : error);
