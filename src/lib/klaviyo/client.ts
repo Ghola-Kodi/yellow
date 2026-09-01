@@ -1,5 +1,12 @@
 const klaviyoPrivateKey = process.env.KLAVIYO_PRIVATE_API_KEY;
 
+// Klaviyo retired the entire legacy v1/v2 API (including v1/track) on
+// June 30, 2024 — calls to it now return 410 Gone. All events go through
+// the current Events API instead. Revision header is required on every
+// call; bump this when Klaviyo's stable revision moves forward.
+// https://developers.klaviyo.com/en/reference/create_event
+const KLAVIYO_REVISION = '2026-07-15';
+
 export const klaviyoClient = {
   async post(path: string, body: Record<string, unknown>) {
     if (!klaviyoPrivateKey) {
@@ -11,6 +18,8 @@ export const klaviyoClient = {
       headers: {
         Authorization: `Klaviyo-API-Key ${klaviyoPrivateKey}`,
         'Content-Type': 'application/json',
+        Accept: 'application/json',
+        revision: KLAVIYO_REVISION,
       },
       body: JSON.stringify(body),
     });
@@ -35,19 +44,34 @@ export async function triggerDunningEmail(params: {
   declineType: 'soft' | 'hard';
   amountCents: number;
   currency: string;
+  uniqueId?: string; // pass a stable id (Stripe event/PI id) so retries don't double-send
 }) {
   const eventName = DECLINE_EVENT_NAMES[params.declineType];
 
-  const result = await klaviyoClient.post('v1/track', {
-    token: klaviyoPrivateKey ?? '',
-    event: eventName,
-    customer_properties: {
-      $email: params.email,
-    },
-    properties: {
-      decline_type: params.declineType,
-      amount: params.amountCents / 100,
-      currency: params.currency,
+  const result = await klaviyoClient.post('events', {
+    data: {
+      type: 'event',
+      attributes: {
+        ...(params.uniqueId ? { unique_id: params.uniqueId } : {}),
+        metric: {
+          data: {
+            type: 'metric',
+            attributes: { name: eventName },
+          },
+        },
+        profile: {
+          data: {
+            type: 'profile',
+            attributes: { email: params.email },
+          },
+        },
+        value: params.amountCents / 100,
+        properties: {
+          decline_type: params.declineType,
+          amount: params.amountCents / 100,
+          currency: params.currency,
+        },
+      },
     },
   });
 
