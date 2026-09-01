@@ -1,4 +1,5 @@
-﻿import { createPaymentFailure } from '@/lib/payment-store';
+import { createPaymentFailure } from '@/lib/payment-store';
+import { checkSimulatorRateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
   const payload = await request.json().catch(() => ({}));
@@ -6,6 +7,13 @@ export async function POST(request: Request) {
 
   if (!email || !amount) {
     return Response.json({ error: 'Missing required fields' }, { status: 400 });
+  }
+
+  const clientIp = getClientIp(request);
+  const rateLimit = await checkSimulatorRateLimit(clientIp, email);
+
+  if (!rateLimit.allowed) {
+    return Response.json({ error: rateLimit.reason }, { status: 429 });
   }
 
   const record = await createPaymentFailure({
