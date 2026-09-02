@@ -86,25 +86,33 @@ const MAX_RAW_BODY_LOG = 2_000;
 
 type KlaviyoErrorHandler = (result: KlaviyoEventResponse) => void;
 
-const errorHandlers = new Set<KlaviyoErrorHandler>();
+// Plain array (not a Set) so this compiles under the repo's ES5 target —
+// `for...of` over a Set would require `--downlevelIteration`.
+const errorHandlers: KlaviyoErrorHandler[] = [];
 
 /** Register a handler invoked (fire-and-forget) for every failed Klaviyo call. */
 export function setKlaviyoErrorHandler(handler: KlaviyoErrorHandler | null): () => void {
   if (handler) {
-    errorHandlers.add(handler);
-    return () => errorHandlers.delete(handler);
+    errorHandlers.push(handler);
+    return () => {
+      const index = errorHandlers.indexOf(handler);
+      if (index !== -1) {
+        errorHandlers.splice(index, 1);
+      }
+    };
   }
   return () => undefined;
 }
 
 function notifyErrorHandlers(result: KlaviyoEventResponse): void {
-  for (const handler of errorHandlers) {
+  // Iterate a copy so a handler that unregisters itself mid-loop is safe.
+  errorHandlers.slice().forEach((handler) => {
     try {
       handler(result);
     } catch (handlerError) {
       console.error('⚠️ Klaviyo error handler threw:', handlerError);
     }
-  }
+  });
 }
 
 // ---------------------------------------------------------------------------
