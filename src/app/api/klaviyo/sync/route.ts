@@ -57,16 +57,21 @@ export async function POST(request: Request) {
       return Response.json({ ok: false, error: result.reason }, { status: 500 });
     }
 
+    // ✅ FIXED: Use result.data directly instead of calling .json()
     if (!result.ok) {
-      const details = await result.json?.().catch(() => null);
       return Response.json(
-        { ok: false, error: `Klaviyo returned ${result.status}`, details },
+        { 
+          ok: false, 
+          error: `Klaviyo returned ${result.status}`, 
+          details: result.data || { error: 'No details available' }
+        },
         { status: 502 },
       );
     }
 
+    // ✅ FIXED: result.data already contains the parsed response
     // Events API returns 202 Accepted with no body on success.
-    const data = result.status === 202 ? null : await result.json?.().catch(() => null);
+    const data = result.status === 202 ? null : result.data;
     return Response.json({ ok: true, eventName, email, data });
   } catch (error) {
     console.error('⚠️ Klaviyo test trigger failed:', error instanceof Error ? error.message : error);
