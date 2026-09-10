@@ -1,0 +1,15 @@
+-- =============================================================================
+-- 0099 — OPTIONAL legacy cleanup
+-- The old flat schema (payment_failures, profiles, demo_requests) is replaced
+-- by the normalized dunning model above. Run this ONLY after you've confirmed
+-- the new engine is working and you no longer need the legacy tables.
+-- =============================================================================
+
+-- DROP VIEW IF EXISTS public.demo_conversion_funnel;
+-- DROP VIEW IF EXISTS public.dunning_resolution_by_industry;
+-- DROP VIEW IF EXISTS public.flow_performance;
+-- DROP VIEW IF EXISTS public.active_dunning_cases;
+-- DROP VIEW IF EXISTS public.customer_dunning_summary;
+-- DROP TABLE IF EXISTS public.payment_failures;
+-- DROP TABLE IF EXISTS public.profiles;
+-- DROP TABLE IF EXISTS public.demo_requests;
