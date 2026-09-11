@@ -63,7 +63,7 @@ Stripe (webhooks + API) · Tailwind CSS · framer-motion
 | `STRIPE_SECRET_KEY` | Stripe test secret key |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
 | `KLAVIYO_PRIVATE_API_KEY` | Klaviyo private API key |
-| `NEXT_PUBLIC_APP_URL` | Public base URL (used in email CTAs) |
+| `NEXT_PUBLIC_APP_URL` | *Optional* — public base URL for email CTAs (auto-detected on Vercel, including custom domains) |
 | `CRON_SECRET` | Protects the cron endpoint |
 | `DUNNING_START_AFTER_ATTEMPT` | Stripe attempts before the first dunning email (default 2) |
 | `DUNNING_MAX_ATTEMPTS` | Attempt count that triggers the final notice (default 4) |
@@ -102,6 +102,21 @@ pending sends. The worker runs at `POST /api/cron/dunning`.
 - **Vercel Pro / self-hosted** — use a native cron, or any external scheduler
   (cron-job.org, etc.) hitting the same endpoint with
   `Authorization: Bearer $CRON_SECRET`.
+
+## Deployment (Vercel)
+
+1. **Import the repo** — Vercel auto-detects Next.js.
+2. **Custom domain** (optional) — Project → Settings → Domains → add your
+   domain, then add the DNS record Vercel shows (an A record or
+   `cname.vercel-dns.com`) at your DNS provider. The app auto-detects it via
+   `VERCEL_PROJECT_PRODUCTION_URL`, so no `NEXT_PUBLIC_APP_URL` is required.
+3. **Env vars** — Project → Settings → Environment Variables: set the secrets
+   from the table above (`SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`,
+   `STRIPE_WEBHOOK_SECRET`, `KLAVIYO_PRIVATE_API_KEY`, `CRON_SECRET`).
+4. **Enable the demo** — set `ENABLE_DEMO=true` so `/dashboard/simulator` works
+   on the live site.
+5. **Schedule the worker** — set `CRON_SECRET`, then add the matching GitHub
+   Actions secrets (`APP_URL`, `CRON_SECRET`) for `.github/workflows/dunning-cron.yml`.
 
 ## Notes on design boundaries
 

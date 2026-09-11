@@ -38,8 +38,27 @@ export function getDunningConfig(): DunningConfig {
   };
 }
 
+/**
+ * Public base URL, auto-detected in priority order so no config is required:
+ *   NEXT_PUBLIC_APP_URL (explicit) → Vercel production domain (incl. custom
+ *   domains) → Vercel deployment URL → localhost.
+ */
+export function getAppBaseUrl(): string {
+  const explicit = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (explicit) return explicit.replace(/\/+$/, '');
+
+  // Vercel exposes these automatically — no setup needed, and
+  // VERCEL_PROJECT_PRODUCTION_URL respects your custom domain.
+  const prodDomain = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (prodDomain) return `https://${prodDomain}`;
+
+  const deploymentUrl = process.env.VERCEL_URL?.trim();
+  if (deploymentUrl) return `https://${deploymentUrl}`;
+
+  return 'http://localhost:3000';
+}
+
 /** URL the email CTA points to (the app's hosted update-card page). */
 export function getUpdateCardUrl(stripeCustomerId: string): string {
-  const base = (process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000').replace(/\/+$/, '');
-  return `${base}/dashboard/update-card?customer=${encodeURIComponent(stripeCustomerId)}`;
+  return `${getAppBaseUrl()}/dashboard/update-card?customer=${encodeURIComponent(stripeCustomerId)}`;
 }
