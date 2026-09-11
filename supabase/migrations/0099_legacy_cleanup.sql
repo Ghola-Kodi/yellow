@@ -1,15 +1,22 @@
 -- =============================================================================
--- 0099 — OPTIONAL legacy cleanup
--- The old flat schema (payment_failures, profiles, demo_requests) is replaced
--- by the normalized dunning model above. Run this ONLY after you've confirmed
--- the new engine is working and you no longer need the legacy tables.
+-- 0099 — legacy cleanup (drop the OLD flat schema)
+-- The old flat schema (payment_failures, profiles, demo_requests + their views)
+-- is replaced by the normalized dunning model in 0001–0008. Run this after
+-- 0001–0008 so the portfolio shows one clean architecture and no dead tables.
+--
+-- Idempotent: DROP IF EXISTS + CASCADE.
 -- =============================================================================
 
--- DROP VIEW IF EXISTS public.demo_conversion_funnel;
--- DROP VIEW IF EXISTS public.dunning_resolution_by_industry;
--- DROP VIEW IF EXISTS public.flow_performance;
--- DROP VIEW IF EXISTS public.active_dunning_cases;
--- DROP VIEW IF EXISTS public.customer_dunning_summary;
--- DROP TABLE IF EXISTS public.payment_failures;
--- DROP TABLE IF EXISTS public.profiles;
--- DROP TABLE IF EXISTS public.demo_requests;
+DROP VIEW IF EXISTS public.demo_conversion_funnel CASCADE;
+DROP VIEW IF EXISTS public.dunning_resolution_by_industry CASCADE;
+DROP VIEW IF EXISTS public.flow_performance CASCADE;
+DROP VIEW IF EXISTS public.active_dunning_cases CASCADE;
+DROP VIEW IF EXISTS public.customer_dunning_summary CASCADE;
+
+DROP TABLE IF EXISTS public.payment_failures CASCADE;
+DROP TABLE IF EXISTS public.profiles CASCADE;
+DROP TABLE IF EXISTS public.demo_requests CASCADE;
+
+-- Old trigger helper from the flat schema (dropped with the table's trigger,
+-- but clean it up explicitly too).
+DROP FUNCTION IF EXISTS public.update_payment_failures_updated_at() CASCADE;
