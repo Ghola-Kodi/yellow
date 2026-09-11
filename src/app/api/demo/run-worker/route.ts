@@ -12,8 +12,10 @@ export const maxDuration = 60;
 export async function POST() {
   const isProduction =
     process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
-  if (isProduction) {
-    return Response.json({ ok: false, error: 'Use the cron endpoint in production' }, { status: 404 });
+  // Opt-in for production (portfolio demos): set ENABLE_DEMO=true.
+  const demoEnabled = process.env.ENABLE_DEMO === 'true' || !isProduction;
+  if (!demoEnabled) {
+    return Response.json({ ok: false, error: 'Demo disabled — set ENABLE_DEMO=true to enable' }, { status: 404 });
   }
 
   const [worker, giveUp] = await Promise.all([runDunningWorker(), runGiveUpSweep()]);
