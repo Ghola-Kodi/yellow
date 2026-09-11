@@ -1,0 +1,24 @@
+name: Dunning worker
+
+# Free cron for the async dunning worker. Vercel Hobby doesn't allow cron
+# jobs, so this GitHub Actions schedule pings the deployed endpoint instead.
+#
+# Required repo secrets (Settings -> Secrets and variables -> Actions):
+#   APP_URL     e.g. https://your-app.vercel.app
+#   CRON_SECRET must match CRON_SECRET set on Vercel
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Trigger dunning worker
+        run: |
+          curl -fsS --max-time 55 \
+            -X POST "${{ secrets.APP_URL }}/api/cron/dunning" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

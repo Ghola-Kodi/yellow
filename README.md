@@ -90,6 +90,19 @@ See [`docs/KLAVIYO_SETUP.md`](docs/KLAVIYO_SETUP.md) for the exact metric/event
 names and flow configuration (one flow per decline category, with flow-filter
 exit logic).
 
+## Scheduling the async worker
+
+The webhook handler never calls Klaviyo directly — a separate worker picks up
+pending sends. The worker runs at `POST /api/cron/dunning`.
+
+- **Vercel Hobby (free)** — cron jobs aren't available, so a GitHub Actions
+  schedule pings the endpoint instead (see `.github/workflows/dunning-cron.yml`).
+  Add two repo secrets: `APP_URL` (your deployed URL) and `CRON_SECRET` (must
+  match the `CRON_SECRET` env var set on Vercel).
+- **Vercel Pro / self-hosted** — use a native cron, or any external scheduler
+  (cron-job.org, etc.) hitting the same endpoint with
+  `Authorization: Bearer $CRON_SECRET`.
+
 ## Notes on design boundaries
 
 - The **main app owns entitlements**; this service never grants/revokes access.
