@@ -1,14 +1,11 @@
 import { injectFailure } from '@/lib/demo/inject';
+import { isDemoEnabled } from '@/lib/demo/flag';
 
 export const runtime = 'nodejs';
 
 /** One-click demo: inject a synthetic invoice.payment_failed into the engine. */
 export async function POST(request: Request) {
-  const isProduction =
-    process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
-  // Opt-in for production (portfolio demos): set ENABLE_DEMO=true.
-  const demoEnabled = process.env.ENABLE_DEMO === 'true' || !isProduction;
-  if (!demoEnabled) {
+  if (!isDemoEnabled()) {
     return Response.json({ ok: false, error: 'Demo disabled — set ENABLE_DEMO=true to enable' }, { status: 404 });
   }
 
