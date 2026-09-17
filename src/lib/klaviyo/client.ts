@@ -333,7 +333,11 @@ async function request(
       {
         method,
         headers: {
-          Authorization: `Bearer ${config.apiKey}`,
+          // Klaviyo uses its own custom auth scheme, NOT "Bearer" — Klaviyo
+          // rejects a Bearer-prefixed key with a 401
+          // "Incorrect authentication credentials." error even when the key
+          // itself is valid and unrevoked.
+          Authorization: `Klaviyo-API-Key ${config.apiKey}`,
           'Content-Type': 'application/json',
           Accept: 'application/json',
           revision: config.revision,
