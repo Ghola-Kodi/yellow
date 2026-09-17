@@ -333,7 +333,7 @@ async function request(
       {
         method,
         headers: {
-          Authorization: `Bearer ${config.apiKey}`,
+          Authorization: `Klaviyo-API-Key ${config.apiKey}`,
           'Content-Type': 'application/json',
           Accept: 'application/json',
           revision: config.revision,
