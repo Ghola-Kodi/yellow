@@ -497,6 +497,7 @@ export async function triggerDunningEmail(params: {
         value: amountDollars,
         properties: {
           decline_type: params.declineType,
+          amount_due: amountDollars,
           amount: amountDollars,
           currency: params.currency,
           amount_cents: params.amountCents,
