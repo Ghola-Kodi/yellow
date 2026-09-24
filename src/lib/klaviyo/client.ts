@@ -333,6 +333,9 @@ async function request(
       {
         method,
         headers: {
+          // Klaviyo's current API keys require the `Klaviyo-API-Key` scheme —
+          // `Authorization: Bearer pk_...` is rejected with 401
+          // authentication_failed for these keys.
           Authorization: `Klaviyo-API-Key ${config.apiKey}`,
           'Content-Type': 'application/json',
           Accept: 'application/json',
@@ -406,7 +409,6 @@ async function request(
         'x-ratelimit-limit': response.headers.get('x-ratelimit-limit') ?? undefined,
         'x-ratelimit-remaining': response.headers.get('x-ratelimit-remaining') ?? undefined,
         'x-ratelimit-reset': response.headers.get('x-ratelimit-reset') ?? undefined,
-        'retry-after': response.headers.get('retry-after') ?? undefined,
       },
     },
   });
@@ -497,10 +499,13 @@ export async function triggerDunningEmail(params: {
         value: amountDollars,
         properties: {
           decline_type: params.declineType,
-          amount_due: amountDollars,
           amount: amountDollars,
           currency: params.currency,
           amount_cents: params.amountCents,
+          // Stripe's field name for the outstanding balance, and the name the
+          // Klaviyo email template's merge tag uses. Without this the template
+          // resolves to an empty value and renders the default "0.00".
+          amount_due: amountDollars,
         },
       },
     },
